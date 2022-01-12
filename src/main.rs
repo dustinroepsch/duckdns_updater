@@ -11,17 +11,23 @@ mod duckdns_constants {
 
 const INTERVAL_MINUTES: u32 = 10;
 
+fn update_dns_and_print_msg(dns: &DuckDns) {
+    if let Err(err) = dns.update() {
+        eprintln!("Error updating dns: {}", err);
+    } else {
+        println!("Successfully updated dns!")
+    }
+}
+
 fn main() {
     let dns = DuckDns::new(TOKEN).domains(DOMAIN);
     let mut scheduler = Scheduler::new();
     let interval = INTERVAL_MINUTES.minutes();
 
+    update_dns_and_print_msg(&dns);
+
     scheduler.every(interval).run(move || {
-        if let Err(err) = dns.update() {
-            eprintln!("Error updating dns: {}", err);
-        } else {
-            println!("Successfully updated dns!")
-        }
+        update_dns_and_print_msg(&dns);
     });
 
     loop {
