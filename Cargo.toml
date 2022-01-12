@@ -5,8 +5,10 @@ edition = "2021"
 license = "MIT"
 authors = ["Dustin Ryan-Roepsch"]
 
+[profile.release]
+lto = true
+debug = true
+
 [dependencies]
-delay_timer = "0.10.1"
+clokwerk = "0.3"
 duckdns = "0.1"
-futures = "0.3"
-tokio = "1.15"
