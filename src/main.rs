@@ -1,6 +1,10 @@
 use crate::duckdns_constants::{DOMAIN, TOKEN};
+use anyhow::Error;
+use chrono::{Utc};
 use clokwerk::{Scheduler, TimeUnits};
 use duckdns::DuckDns;
+use std::fs::File;
+use std::io::Write;
 use std::thread;
 use std::time::Duration;
 
@@ -11,23 +15,31 @@ mod duckdns_constants {
 
 const INTERVAL_MINUTES: u32 = 10;
 
-fn update_dns_and_print_msg(dns: &DuckDns) {
+fn update_dns_and_log(dns: &DuckDns, log_file: &mut File) {
     if let Err(err) = dns.update() {
-        eprintln!("Error updating dns: {}", err);
+        write!(log_file, "DuckDNS ({:?}) Error: {}" ,dns, err).expect("Failed to write to log.");
+        println!("DuckDNS ({:?}) Error: {}", dns, err)
     } else {
-        println!("Successfully updated dns!")
+        write!(
+            log_file,
+            "Successfully Updated DNS at time ({})",
+            Utc::now()
+        )
+        .expect("Failed to write log.");
+        println!("Successfully Updated DNS.")
     }
 }
 
-fn main() {
+fn main() -> Result<(), Error> {
+    let mut log_file = File::create("log.txt")?;
     let dns = DuckDns::new(TOKEN).domains(DOMAIN);
     let mut scheduler = Scheduler::new();
     let interval = INTERVAL_MINUTES.minutes();
 
-    update_dns_and_print_msg(&dns);
+    update_dns_and_log(&dns, &mut log_file);
 
     scheduler.every(interval).run(move || {
-        update_dns_and_print_msg(&dns);
+        update_dns_and_log(&dns, &mut log_file);
     });
 
     loop {
