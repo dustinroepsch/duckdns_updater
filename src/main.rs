@@ -1,6 +1,6 @@
-use crate::duckdns_constants::{DOMAIN, TOKEN};
-use anyhow::Error;
-use chrono::{Utc};
+use crate::duckdns_constants::{DOMAIN, INTERVAL_MINUTES, LOG_FILE_LOCATION, TOKEN};
+use anyhow::{Context, Error};
+use chrono::Utc;
 use clokwerk::{Scheduler, TimeUnits};
 use duckdns::DuckDns;
 use std::fs::File;
@@ -11,35 +11,48 @@ use std::time::Duration;
 mod duckdns_constants {
     pub const TOKEN: &str = include_str!("../token.txt");
     pub const DOMAIN: &str = "dustinpc";
+    pub const LOG_FILE_LOCATION: &str = "C:\\Program Files\\DuckDNSUpdater\\log.txt";
+    pub const INTERVAL_MINUTES: u32 = 3;
 }
 
-const INTERVAL_MINUTES: u32 = 10;
-
-fn update_dns_and_log(dns: &DuckDns, log_file: &mut File) {
+fn update_dns_and_log(dns: &DuckDns, log_file: &mut File) -> Result<(), Error> {
     if let Err(err) = dns.update() {
-        write!(log_file, "DuckDNS ({:?}) Error: {}" ,dns, err).expect("Failed to write to log.");
+        write!(log_file, "DuckDNS ({:?}) Error: {}", dns, err)
+            .context("Error writing to log file")?;
         println!("DuckDNS ({:?}) Error: {}", dns, err)
     } else {
-        write!(
-            log_file,
-            "Successfully Updated DNS at time ({})",
-            Utc::now()
-        )
-        .expect("Failed to write log.");
-        println!("Successfully Updated DNS.")
+        let time = Utc::now();
+
+        writeln!(log_file, "Successfully Updated DNS at UTC: ({})", time)
+            .expect("Failed to write log.");
+
+        println!("Successfully Updated DNS at UTC: ({})", time);
     }
+
+    Ok(())
+}
+
+fn warn_error(err: Error) {
+    println!("Warning!! Error encountered: {}", err);
 }
 
 fn main() -> Result<(), Error> {
-    let mut log_file = File::create("log.txt")?;
+    let mut log_file = File::create(LOG_FILE_LOCATION).context(format!(
+        "Error creating/truncating the log file at ({})",
+        LOG_FILE_LOCATION
+    ))?;
     let dns = DuckDns::new(TOKEN).domains(DOMAIN);
     let mut scheduler = Scheduler::new();
     let interval = INTERVAL_MINUTES.minutes();
 
-    update_dns_and_log(&dns, &mut log_file);
+    if let Err(err) = update_dns_and_log(&dns, &mut log_file) {
+        warn_error(err);
+    }
 
     scheduler.every(interval).run(move || {
-        update_dns_and_log(&dns, &mut log_file);
+        if let Err(err) = update_dns_and_log(&dns, &mut log_file) {
+            warn_error(err);
+        }
     });
 
     loop {
