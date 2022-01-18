@@ -1,3 +1,5 @@
+#![deny(clippy::pedantic)]
+
 use crate::duckdns_constants::{DOMAIN, INTERVAL_MINUTES, LOG_FILE_LOCATION, TOKEN};
 use anyhow::{Context, Error};
 use chrono::Utc;
@@ -19,7 +21,7 @@ fn update_dns_and_log(dns: &DuckDns, log_file: &mut File) -> Result<(), Error> {
     if let Err(err) = dns.update() {
         write!(log_file, "DuckDNS ({:?}) Error: {}", dns, err)
             .context("Error writing to log file")?;
-        println!("DuckDNS ({:?}) Error: {}", dns, err)
+        println!("DuckDNS ({:?}) Error: {}", dns, err);
     } else {
         let time = Utc::now();
 
@@ -32,7 +34,7 @@ fn update_dns_and_log(dns: &DuckDns, log_file: &mut File) -> Result<(), Error> {
     Ok(())
 }
 
-fn warn_error(err: Error) {
+fn warn_error(err: &Error) {
     println!("Warning!! Error encountered: {}", err);
 }
 
@@ -46,12 +48,12 @@ fn main() -> Result<(), Error> {
     let interval = INTERVAL_MINUTES.minutes();
 
     if let Err(err) = update_dns_and_log(&dns, &mut log_file) {
-        warn_error(err);
+        warn_error(&err);
     }
 
     scheduler.every(interval).run(move || {
         if let Err(err) = update_dns_and_log(&dns, &mut log_file) {
-            warn_error(err);
+            warn_error(&err);
         }
     });
 
