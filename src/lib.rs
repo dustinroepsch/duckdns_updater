@@ -2,7 +2,7 @@
 
 pub mod options;
 
-use crate::options::{DOMAIN, INTERVAL_MINUTES, TOKEN};
+use crate::options::Opt;
 use anyhow::Error;
 
 use clokwerk::{Scheduler, TimeUnits};
@@ -15,24 +15,29 @@ use std::time::Duration;
 
 const SCHEDULER_POLLING_INTERVAL: Duration = Duration::from_secs(30);
 
-fn update_dns_and_log(dns: &DuckDns) {
+fn update_dns_and_log(dns: &DuckDns, domain: &str) {
     if let Err(err) = dns.update() {
         error!("DuckDNS ({:?}) Error: {}", dns, err);
     } else {
-        info!("Successfully updated DNS for {}.duckdns.org", DOMAIN);
+        info!("Successfully updated DNS for {}.duckdns.org", domain);
     }
 }
 
 #[allow(clippy::missing_errors_doc)]
-pub fn run() -> Result<(), Error> {
-    let dns = DuckDns::new(TOKEN).domains(DOMAIN);
+pub fn run(opt: Opt) -> Result<(), Error> {
+    let Opt {
+        token,
+        domain,
+        interval,
+    } = opt;
+    let dns = DuckDns::new(token).domains(&domain);
     let mut scheduler = Scheduler::new();
-    let interval = INTERVAL_MINUTES.minutes();
+    let interval = interval.minutes();
 
-    update_dns_and_log(&dns);
+    update_dns_and_log(&dns, &domain);
 
     scheduler.every(interval).run(move || {
-        update_dns_and_log(&dns);
+        update_dns_and_log(&dns, &domain);
     });
 
     loop {
