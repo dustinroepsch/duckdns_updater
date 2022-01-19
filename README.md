@@ -3,10 +3,12 @@
 This is a small tool written in rust that will periodically point your duckdns domain to the pc running this program. I use it! 
 
 ## Building
+
 It's a regular old rust program. Build it with:
 `cargo build --release`
 
 ## Usage
+
 ```
 duckdns_updater 2.0.0
 Update the given `DuckDNS` domain to the ip address of the machine running this binary on a given interval
