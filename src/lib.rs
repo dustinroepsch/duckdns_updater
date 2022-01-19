@@ -2,7 +2,6 @@
 
 pub mod options;
 
-use crate::options::Opt;
 use anyhow::Error;
 
 use clokwerk::{Scheduler, TimeUnits};
@@ -24,12 +23,7 @@ fn update_dns_and_log(dns: &DuckDns, domain: &str) {
 }
 
 #[allow(clippy::missing_errors_doc)]
-pub fn run(opt: Opt) -> Result<(), Error> {
-    let Opt {
-        token,
-        domain,
-        interval,
-    } = opt;
+pub fn run(token: String, domain: String, interval: u32) -> Result<(), Error> {
     let dns = DuckDns::new(token).domains(&domain);
     let mut scheduler = Scheduler::new();
     let interval = interval.minutes();
