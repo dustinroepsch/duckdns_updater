@@ -1,4 +1,4 @@
-DuckDNS Auto Updater
+## DuckDNS Auto Updater
 
 This is a small tool written in rust that will periodically point your duckdns domain to the pc running this program. I use it! 
 
