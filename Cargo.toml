@@ -1,6 +1,6 @@
 [package]
 name = "duckdns_updater"
-version = "2.1.0"
+version = "2.1.1"
 edition = "2021"
 license = "MIT"
 authors = ["Dustin Ryan-Roepsch"]
@@ -8,6 +8,7 @@ authors = ["Dustin Ryan-Roepsch"]
 [profile.release]
 lto = true
 debug = true
+panic = "abort"
 
 [dependencies]
 anyhow = "1.0"
