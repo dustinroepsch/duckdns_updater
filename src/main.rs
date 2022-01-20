@@ -2,6 +2,7 @@ use anyhow::{Context, Error};
 use duckdns_updater::options::Opt;
 use duckdns_updater::run;
 
+use log::trace;
 use simplelog::{ColorChoice, CombinedLogger, Config, TermLogger, TerminalMode, WriteLogger};
 use std::fs::File;
 use structopt::StructOpt;
@@ -36,6 +37,7 @@ fn main() -> Result<(), Error> {
     }
 
     CombinedLogger::init(loggers).context("Error initializing combined logger")?;
+    trace!("Initialized logging!");
 
     run(token, domain, interval)
 }
